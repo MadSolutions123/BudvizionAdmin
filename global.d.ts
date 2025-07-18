@@ -1,4 +1,16 @@
 ///<reference types='vite/client' />
+
+// Extend ImportMeta interface to include Vite's env property
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
+interface ImportMetaEnv {
+  readonly VITE_APP_API_BASE_URL: string;
+  readonly VITE_APP_LOCAL_STORAGE_ENCRYPTION_KEY: string;
+  // Add other environment variables as needed
+}
+
 declare module '@ckeditor/ckeditor5-build-classic';
 declare module '@ckeditor/ckeditor5-react';
 declare module '@fullcalendar/bootstrap';

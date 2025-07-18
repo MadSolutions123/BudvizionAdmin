@@ -9,9 +9,10 @@ import FileManager from "../pages/FileManager/index";
 
 // // Profile
 import UserProfile from "../pages/Authentication/user-profile";
-
+import UserList from "../pages/Users/user-list";
 // Pages Calendar
 import Calendar from "../pages/Calendar/index";
+
 
 // // //Tasks
 import TasksList from "../pages/Tasks/tasks-list";
@@ -202,7 +203,7 @@ const authProtectedRoutes = [
   { path: "/calendar", component: <Calendar /> },
 
   //users
-  { path: "/users", component: <Users /> },
+  { path: "/users", component: <UserList /> },
 
   //   // //profile
   { path: "/profile", component: <UserProfile /> },

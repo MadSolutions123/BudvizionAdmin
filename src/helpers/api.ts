@@ -1,0 +1,73 @@
+import axios from 'axios';
+import { localStorageEncryptionService } from './localStorageEncryption';
+import { ApiEndpoints } from './constants';
+// Get API base URL with fallback for development
+const API_BASE_URL = (import.meta as any).env.VITE_APP_API_BASE_URL || 'http://localhost:3000';
+
+console.log('API Base URL:', API_BASE_URL);
+
+// Create axios instance with base configuration
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30_000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    // Get token from encrypted storage
+    const tokenData = localStorageEncryptionService.getTokenData();
+    const token = tokenData?.tokens?.access?.token;
+    
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // Handle common errors
+    if (error.response?.status === 401) {
+      // Unauthorized - clear token and redirect to login
+      localStorageEncryptionService.removeTokenData();
+      localStorageEncryptionService.removeUserData();
+      // You can add redirect logic here
+      // window.location.href = '/login';
+    }
+    
+    if (error.response?.status === 500) {
+      console.error('Server Error:', error.response.data);
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+// API Service Functions
+export const apiService = {
+  // Get users with pagination
+  getUserList: async (page = 1, limit = 10) => {
+    try {
+      const response = await api.get(`${ApiEndpoints.GET_USERS}?page=${page}&limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      throw error;
+    }
+  },
+};
+
+export default api; 
