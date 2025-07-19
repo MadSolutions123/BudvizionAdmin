@@ -1,25 +1,32 @@
 import React, { useEffect } from "react";
-import PropTypes from "prop-types";
-import withRouter from "../../components/Common/withRouter";
-import { logoutUser } from "../../store/actions";
-
-//redux
-import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { localStorageEncryptionService } from "../../helpers/localStorageEncryption";
 
 const Logout = () => {
-  const history = useNavigate();
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(logoutUser(history));
-  }, [dispatch, history]);
+    const performLogout = () => {
+      try {
+        // Clear all stored authentication data
+        localStorageEncryptionService.removeTokenData();
+        localStorageEncryptionService.removeUserData();
+        
+        console.log('✅ User logged out successfully');
+        
+        // Redirect to login page
+        navigate('/login', { replace: true });
+      } catch (error) {
+        console.error('❌ Error during logout:', error);
+        // Still redirect to login even if cleanup fails
+        navigate('/login', { replace: true });
+      }
+    };
+
+    performLogout();
+  }, [navigate]);
 
   return <></>;
 };
 
-Logout.propTypes = {
-  history: PropTypes.object,
-};
-
-export default withRouter(Logout);
+export default Logout;

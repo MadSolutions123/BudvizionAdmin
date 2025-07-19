@@ -58,6 +58,17 @@ api.interceptors.response.use(
 
 // API Service Functions
 export const apiService = {
+  // Auth functions
+  login: async (credentials: { email: string; password: string }) => {
+    try {
+      const response = await api.post(ApiEndpoints.LOGIN, credentials);
+      return response.data;
+    } catch (error) {
+      console.error('Error during login:', error);
+      throw error;
+    }
+  },
+
   // Get users with pagination
   getUserList: async (page = 1, limit = 10) => {
     try {
@@ -65,6 +76,50 @@ export const apiService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching users:', error);
+      throw error;
+    }
+  },
+
+  // Get single user by ID
+  getUserById: async (id: string | number) => {
+    try {
+      const response = await api.get(`${ApiEndpoints.GET_USERS}/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      throw error;
+    }
+  },
+
+  // Update user by ID
+  updateUser: async (id: string | number, userData: any) => {
+    try {
+      const response = await api.patch(`${ApiEndpoints.GET_USERS}/${id}`, userData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  },
+
+  // Create new user
+  createUser: async (userData: any) => {
+    try {
+      const response = await api.post(`${ApiEndpoints.GET_USERS}`, userData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+  },
+
+  // Delete user by ID
+  deleteUser: async (id: string | number) => {
+    try {
+      const response = await api.delete(`${ApiEndpoints.GET_USERS}/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting user:', error);
       throw error;
     }
   },

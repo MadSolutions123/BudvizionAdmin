@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Col, Container, Row, Badge, Spinner, Alert } from "reactstrap";
+import { Col, Container, Row, Badge, Spinner, Alert, Button } from "reactstrap";
+import { useNavigate } from "react-router-dom";
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 import TableContainer from "../../components/Common/TableContainer";
 import ServerPagination from "../../components/Common/ServerPagination";
+import DeleteModal from "../../components/Common/DeleteModal";
 import { apiService } from "../../helpers/api";
 
 interface User {
@@ -36,10 +38,12 @@ interface ApiResponse {
 }
 
 export default function UserList() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [paginationLoading, setPaginationLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pagination, setPagination] = useState({
     total: 0,
@@ -47,6 +51,11 @@ export default function UserList() {
     limit: 10,
     totalPages: 0
   });
+
+  // Delete modal states
+  const [deleteModal, setDeleteModal] = useState<boolean>(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
 
   // Define table columns
   const columns = useMemo(
@@ -191,13 +200,13 @@ export default function UserList() {
           return (
             <div className="d-flex gap-2">
               {/* View Button */}
-              <button
+              {/* <button
                 className="btn btn-sm btn-outline-info"
                 onClick={() => handleView(user)}
                 title="View User"
               >
                 <i className="mdi mdi-eye"></i>
-              </button>
+              </button> */}
               
               {/* Edit Button */}
               <button
@@ -273,17 +282,57 @@ export default function UserList() {
 
   const handleEdit = (user: User) => {
     console.log('✏️ Edit user:', user);
-    // TODO: Navigate to edit page or open edit modal
-    // Example: navigate(`/users/edit/${user.id}`);
+    navigate(`/users/${user.id}/edit`);
   };
 
   const handleDelete = (user: User) => {
     console.log('🗑️ Delete user:', user);
-    // TODO: Show confirmation modal and call delete API
-    if (window.confirm(`Are you sure you want to delete ${user.firstName} ${user.lastName}?`)) {
-      // Example: deleteUser(user.id);
-      console.log('User deletion confirmed');
+    setSelectedUser(user);
+    setDeleteModal(true);
+  };
+
+  // Handle actual user deletion
+  const handleConfirmDelete = async () => {
+    if (!selectedUser) return;
+
+    try {
+      setDeleteLoading(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      console.log(`🔄 Deleting user: ${selectedUser.firstName} ${selectedUser.lastName}`);
+
+      const response = await apiService.deleteUser(selectedUser.id);
+      
+      if (response.status === 200) {
+        setSuccessMessage(`User "${selectedUser.firstName} ${selectedUser.lastName}" has been deleted successfully!`);
+        console.log("✅ User deleted successfully:", response);
+        
+        // Refresh the table data
+        await fetchUsers(pagination.page, pagination.limit);
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 5000);
+      } else {
+        setError(response.message || "Failed to delete user");
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to delete user");
+      console.error("❌ Error deleting user:", err);
+    } finally {
+      // Always close modal and reset selection after API call completes
+      setDeleteModal(false);
+      setSelectedUser(null);
+      setDeleteLoading(false);
     }
+  };
+
+  // Handle delete modal close
+  const handleDeleteModalClose = () => {
+    setDeleteModal(false);
+    setSelectedUser(null);
   };
 
   // Meta title
@@ -296,16 +345,27 @@ export default function UserList() {
         <Container fluid>
           <Breadcrumbs title="Users" breadcrumbItem="User List" />
           
-          {error && (
-            <Row>
-              <Col>
-                <Alert color="danger" className="mb-4">
-                  <i className="mdi mdi-alert-circle-outline me-2"></i>
-                  {error}
-                </Alert>
-              </Col>
-            </Row>
-          )}
+                  {error && (
+          <Row>
+            <Col>
+              <Alert color="danger" className="mb-4">
+                <i className="mdi mdi-alert-circle-outline me-2"></i>
+                {error}
+              </Alert>
+            </Col>
+          </Row>
+        )}
+
+        {successMessage && (
+          <Row>
+            <Col>
+              <Alert color="success" className="mb-4">
+                <i className="mdi mdi-check-circle-outline me-2"></i>
+                {successMessage}
+              </Alert>
+            </Col>
+          </Row>
+        )}
 
           <Row>
             <Col>
@@ -313,11 +373,18 @@ export default function UserList() {
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-center mb-4">
                     <h4 className="card-title mb-0">User Management</h4>
-                    <div className="d-flex align-items-center">
-                      <span className="text-muted me-3">
+                    <div className="d-flex align-items-center gap-3">
+                      <span className="text-muted">
                         Total Users: <strong>{pagination.total}</strong>
                       </span>
                       {loading && <Spinner size="sm" color="primary" />}
+                      <Button
+                        color="primary"
+                        onClick={() => navigate("/users/create")}
+                      >
+                        <i className="mdi mdi-plus me-1"></i>
+                        Create User
+                      </Button>
                     </div>
                   </div>
 
@@ -380,6 +447,17 @@ export default function UserList() {
             </Col>
           </Row>
         </Container>
+
+        {/* Delete Confirmation Modal */}
+        <DeleteModal
+          show={deleteModal}
+          onDeleteClick={handleConfirmDelete}
+          onCloseClick={handleDeleteModalClose}
+          title="Delete User"
+          message={`Are you sure you want to permanently delete ${selectedUser?.firstName} ${selectedUser?.lastName}? This action cannot be undone.`}
+          deleteButtonText="Yes, Delete User"
+          loading={deleteLoading}
+        />
       </div>
     </React.Fragment>
   );

@@ -1,11 +1,5 @@
-import React from "react";
-import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
-import withRouter from "../../components/Common/withRouter";
-
-//redux
-import { useSelector, useDispatch } from "react-redux";
-import { createSelector } from "reselect";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 // Formik validation
 import * as Yup from "yup";
@@ -22,57 +16,74 @@ import {
   Input,
   FormFeedback,
   Label,
+  Spinner,
 } from "reactstrap";
 
-// actions
-import { loginUser, socialLogin } from "../../store/actions";
+// API service
+import { apiService } from "../../helpers/api";
+import { localStorageEncryptionService } from "../../helpers/localStorageEncryption";
 
 // import images
 import profile from "../../assets/images/profile-img.png";
-import logo from "../../assets/images/logo.svg";
-import lightlogo from "../../assets/images/logo-light.svg";
+import logo from "../../assets/images/logo-small.png";
+import lightlogo from "../../assets/images/logo-small.png";
 
-const Login = (props) => {
+const Login = () => {
   //meta title
-  document.title = "Login | Skote - Vite React Admin & Dashboard Template";
-  const dispatch = useDispatch();
-
+  document.title = "Login | BudVizion ";
+  
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const validation = useFormik({
     // enableReinitialize : use this flag when initial values needs to be changed
     enableReinitialize: true,
-
     initialValues: {
-      email: "admin@themesbrand.com" || "",
-      password: "123456" || "",
+      email: "",
+      password: "",
     },
     validationSchema: Yup.object({
       email: Yup.string().required("Please Enter Your Email"),
       password: Yup.string().required("Please Enter Your Password"),
     }),
-    onSubmit: (values) => {
-      dispatch(loginUser(values, props.router.navigate));
+    onSubmit: async (values) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        console.log('🔄 Attempting login with:', { email: values.email });
+
+        const response = await apiService.login({
+          email: values.email,
+          password: values.password,
+        });
+
+        console.log('✅ Login response:', response);
+
+        if (response.status === 200 && response.data) {
+          // Store tokens and user data
+          if (response.data.tokens) {
+            localStorageEncryptionService.setTokenData(response.data);
+          }
+          
+          if (response.data.user) {
+            localStorageEncryptionService.setUserData(response.data.user);
+          }
+
+          // Redirect to users page
+          window.location.reload();
+        } else {
+          setError(response.message || 'Login failed. Please try again.');
+        }
+      } catch (err) {
+        console.error('❌ Login error:', err);
+        const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
     },
   });
-
-  const LoginProperties = createSelector(
-    (state) => state.Login,
-    (login) => ({
-      error: login.error
-    })
-  );
-
-  const {
-    error
-  } = useSelector(LoginProperties);
-
-  const signIn = type => {
-    dispatch(socialLogin(type, props.router.navigate));
-  };
-
-  //for facebook and google authentication
-  const socialResponse = type => {
-    signIn(type);
-  };
 
   return (
     <React.Fragment>
@@ -91,7 +102,7 @@ const Login = (props) => {
                     <Col xs={7}>
                       <div className="text-primary p-4">
                         <h5 className="text-primary">Welcome Back !</h5>
-                        <p>Sign in to continue to Skote.</p>
+                        <p>Sign in to continue to BudVizion admin panel.</p>
                       </div>
                     </Col>
                     <Col className="col-5 align-self-end">
@@ -185,7 +196,7 @@ const Login = (props) => {
                         ) : null}
                       </div>
 
-                      <div className="form-check">
+                      {/* <div className="form-check">
                         <input
                           type="checkbox"
                           className="form-check-input"
@@ -197,18 +208,26 @@ const Login = (props) => {
                         >
                           Remember me
                         </label>
-                      </div>
+                      </div> */}
 
                       <div className="mt-3 d-grid">
                         <button
                           className="btn btn-primary btn-block"
                           type="submit"
+                          disabled={loading}
                         >
-                          Log In
+                          {loading ? (
+                            <>
+                              <Spinner size="sm" className="me-2" />
+                              Logging in...
+                            </>
+                          ) : (
+                            "Log In"
+                          )}
                         </button>
                       </div>
 
-                      <div className="mt-4 text-center">
+                      {/* <div className="mt-4 text-center">
                         <h5 className="font-size-14 mb-3">Sign in with</h5>
 
                         <ul className="list-inline">
@@ -223,7 +242,7 @@ const Login = (props) => {
                             >
                               <i className="mdi mdi-facebook" />
                             </Link>
-                          </li>
+                          </li> */}
                           {/*<li className="list-inline-item">*/}
                           {/*  <TwitterLogin*/}
                           {/*    loginUrl={*/}
@@ -245,7 +264,7 @@ const Login = (props) => {
                           {/*    </a>*/}
                           {/*  </TwitterLogin>*/}
                           {/*</li>*/}
-                          <li className="list-inline-item">
+                          {/* <li className="list-inline-item">
                             <Link
                               to="#"
                               className="social-list-item bg-danger text-white border-danger"
@@ -258,19 +277,19 @@ const Login = (props) => {
                             </Link>
                           </li>
                         </ul>
-                      </div>
+                      </div> */}
 
-                      <div className="mt-4 text-center">
+                      {/* <div className="mt-4 text-center">
                         <Link to="/forgot-password" className="text-muted">
                           <i className="mdi mdi-lock me-1" />
                           Forgot your password?
                         </Link>
-                      </div>
+                      </div> */}
                     </Form>
                   </div>
                 </CardBody>
               </Card>
-              <div className="mt-5 text-center">
+              {/* <div className="mt-5 text-center">
                 <p>
                   Don&#39;t have an account ?{" "}
                   <Link to="/register" className="fw-medium text-primary">
@@ -282,7 +301,7 @@ const Login = (props) => {
                   © {new Date().getFullYear()} Skote. Crafted with{" "}
                   <i className="mdi mdi-heart text-danger" /> by Themesbrand
                 </p>
-              </div>
+              </div> */}
             </Col>
           </Row>
         </Container>
@@ -291,8 +310,4 @@ const Login = (props) => {
   );
 };
 
-export default withRouter(Login);
-
-Login.propTypes = {
-  history: PropTypes.object,
-};
+export default Login;

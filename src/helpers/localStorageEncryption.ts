@@ -229,6 +229,7 @@ class LocalStorageEncryptionService {
   // Check if user is authenticated
   isAuthenticated(): boolean {
     const tokenData = this.getTokenData();
+    console.log(tokenData);
     return !!(tokenData?.tokens.access.token);
   }
 

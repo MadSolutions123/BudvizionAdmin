@@ -12,6 +12,7 @@ import { authProtectedRoutes, publicRoutes } from "./routes/index";
 
 // Import all middleware
 import Authmiddleware from "./routes/route";
+import PublicRoute from "./routes/PublicRoute";
 
 // layouts Format
 import VerticalLayout from "./components/VerticalLayout/";
@@ -70,17 +71,33 @@ const App = (props) => {
 
   const Layout = getLayout(layoutType);
 
+  // Routes that should redirect authenticated users to dashboard
+  const authRedirectRoutes = ["/login", "/register", "/forgot-password", "/logout"];
+
   return (
     <React.Fragment>
       <Routes>
-        {publicRoutes.map((route, idx) => (
-          <Route
-            path={route.path}
-            element={<NonAuthLayout>{route.component}</NonAuthLayout>}
-            key={idx}
-            exact={true}
-          />
-        ))}
+        {publicRoutes.map((route, idx) => {
+          // Check if this route should redirect authenticated users
+          const shouldRedirect = authRedirectRoutes.includes(route.path);
+          
+          return (
+            <Route
+              path={route.path}
+              element={
+                shouldRedirect ? (
+                  <PublicRoute>
+                    <NonAuthLayout>{route.component}</NonAuthLayout>
+                  </PublicRoute>
+                ) : (
+                  <NonAuthLayout>{route.component}</NonAuthLayout>
+                )
+              }
+              key={idx}
+              exact={true}
+            />
+          );
+        })}
 
         {authProtectedRoutes.map((route, idx) => (
           <Route

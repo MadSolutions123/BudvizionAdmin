@@ -29,7 +29,7 @@ import { userForgetPassword } from "../../store/actions";
 // import images
 import profile from "../../assets/images/profile-img.png";
 import logo from "../../assets/images/logo.svg";
-import lightlogo from "../../assets/images/logo-light.svg";
+import lightlogo from "../../assets/images/logo-small.png";
 
 const ForgetPasswordPage = (props) => {
   //meta title
@@ -82,7 +82,7 @@ const ForgetPasswordPage = (props) => {
                     <Col xs={7}>
                       <div className="text-primary p-4">
                         <h5 className="text-primary">Welcome Back !</h5>
-                        <p>Sign in to continue to Skote.</p>
+                        <p>Sign in to continue to BudVizion admin panel.</p>
                       </div>
                     </Col>
                     <Col className="col-5 align-self-end">

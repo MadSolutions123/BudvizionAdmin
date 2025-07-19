@@ -10,10 +10,8 @@ import {
 //i18n
 import { withTranslation } from "react-i18next";
 
-// Redux
-import { connect } from "react-redux";
-import { Link } from "react-router-dom";
-import withRouter from "../../Common/withRouter";
+import { Link, useNavigate } from "react-router-dom";
+import { localStorageEncryptionService } from "../../../helpers/localStorageEncryption";
 
 // users
 import user1 from "../../../assets/images/users/avatar-1.jpg";
@@ -21,23 +19,38 @@ import user1 from "../../../assets/images/users/avatar-1.jpg";
 const ProfileMenu = (props) => {
   // Declare a new state variable, which we'll call "menu"
   const [menu, setMenu] = useState(false);
-
   const [username, setusername] = useState("Admin");
+  const [userEmail, setUserEmail] = useState("");
+  
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (localStorage.getItem("authUser")) {
-      if (import.meta.env.VITE_APP_DEFAULTAUTH === "firebase") {
-        const obj = JSON.parse(localStorage.getItem("authUser"));
-        setusername(obj.email);
-      } else if (
-        import.meta.env.VITE_APP_DEFAULTAUTH === "fake" ||
-        import.meta.env.VITE_APP_DEFAULTAUTH === "jwt"
-      ) {
-        const obj = JSON.parse(localStorage.getItem("authUser"));
-        setusername(obj.username);
-      }
+    // Get user data from encrypted storage
+    const userData = localStorageEncryptionService.getUserData();
+    if (userData) {
+      // Set username and email from stored user data
+      setusername(userData.firstName ? `${userData.firstName} ${userData.lastName}` : userData.userName || userData.email || "Admin");
+      setUserEmail(userData.email || "");
     }
-  }, [props.success]);
+  }, []);
+
+  // Handle logout function
+  const handleLogout = () => {
+    try {
+      // Clear all stored authentication data
+      localStorageEncryptionService.removeTokenData();
+      localStorageEncryptionService.removeUserData();
+      
+      console.log('✅ User logged out successfully');
+      
+      // Redirect to login page
+      navigate('/login');
+    } catch (error) {
+      console.error('❌ Error during logout:', error);
+      // Still redirect to login even if cleanup fails
+      navigate('/login');
+    }
+  };
 
   return (
     <React.Fragment>
@@ -60,7 +73,7 @@ const ProfileMenu = (props) => {
           <i className="mdi mdi-chevron-down d-none d-xl-inline-block" />
         </DropdownToggle>
         <DropdownMenu className="dropdown-menu-end">
-          <DropdownItem tag="a" href="/profile">
+          {/* <DropdownItem tag="a" href="/profile">
             {" "}
             <i className="bx bx-user font-size-16 align-middle me-1" />
             {props.t("Profile")}{" "}
@@ -78,11 +91,11 @@ const ProfileMenu = (props) => {
             <i className="bx bx-lock-open font-size-16 align-middle me-1" />
             {props.t("Lock screen")}
           </DropdownItem>
-          <div className="dropdown-divider" />
-          <Link to="/logout" className="dropdown-item">
+          <div className="dropdown-divider" /> */}
+          <DropdownItem onClick={handleLogout}>
             <i className="bx bx-power-off font-size-16 align-middle me-1 text-danger" />
             <span>{props.t("Logout")}</span>
-          </Link>
+          </DropdownItem>
         </DropdownMenu>
       </Dropdown>
     </React.Fragment>
@@ -90,15 +103,7 @@ const ProfileMenu = (props) => {
 };
 
 ProfileMenu.propTypes = {
-  success: PropTypes.any,
   t: PropTypes.any,
 };
 
-const mapStatetoProps = (state) => {
-  const { error, success } = state.Profile;
-  return { error, success };
-};
-
-export default withRouter(
-  connect(mapStatetoProps, {})(withTranslation()(ProfileMenu))
-);
+export default withTranslation()(ProfileMenu);

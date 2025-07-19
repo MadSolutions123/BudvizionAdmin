@@ -64,7 +64,7 @@ const Login2 = () => {
                       <div>
                         <h5 className="text-primary">Welcome Back !</h5>
                         <p className="text-muted">
-                          Sign in to continue to Skote.
+                          Sign in to continue to BudVizion admin panel.
                         </p>
                       </div>
 
