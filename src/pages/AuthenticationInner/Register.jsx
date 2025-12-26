@@ -10,7 +10,7 @@ import { Row, Col, CardBody, Card, Container, Form, Label, Input, FormFeedback }
 
 // import images
 import profileImg from "../../assets/images/profile-img.png";
-import logoImg from "../../assets/images/logo-small.png";
+import logoImg from "../../assets/images/logo-small.pngnavbar-brand-box";
 import lightlogo from "../../assets/images/logo-small.png";
 
 const Register = () => {

@@ -10,7 +10,9 @@ export enum ApiEndpoints {
   RESET_PASSWORD = 'api/v1/auth/reset-password',
   GOOGLE_OAUTH = 'api/v1/auth/google',
   // Users endpoints
-  GET_USERS = 'api/v1/users'
+  GET_USERS = 'api/v1/users',
+  // Streams endpoints
+  GET_STREAMS = 'api/v1/stream-info'
 }
 
 // Storage keys enum (camelCase)

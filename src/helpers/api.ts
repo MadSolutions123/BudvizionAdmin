@@ -123,6 +123,39 @@ export const apiService = {
       throw error;
     }
   },
+
+  // Get streams with pagination
+  getStreamList: async (page = 1, limit = 10) => {
+    try {
+      const response = await api.get(`${ApiEndpoints.GET_STREAMS}?page=${page}&limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching streams:', error);
+      throw error;
+    }
+  },
+
+  // Get single stream by ID
+  getStreamById: async (id: string | number) => {
+    try {
+      const response = await api.get(`${ApiEndpoints.GET_STREAMS}/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching stream:', error);
+      throw error;
+    }
+  },
+
+  // Delete stream by ID
+  deleteStream: async (id: string | number) => {
+    try {
+      const response = await api.delete(`${ApiEndpoints.GET_STREAMS}/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting stream:', error);
+      throw error;
+    }
+  },
 };
 
-export default api; 
+export default api;

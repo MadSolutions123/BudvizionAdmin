@@ -31,6 +31,7 @@ interface User {
   userName: string;
   phone: string;
   role: string;
+  dob?: string;
 }
 
 interface ApiResponse {
@@ -49,6 +50,18 @@ const UserForm: React.FC = () => {
   const [submitLoading, setSubmitLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Function to calculate age
+  const calculateAge = (dobString: string): number => {
+    const dob = new Date(dobString);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
   // Form validation schema - all fields required
   const validationSchema = Yup.object().shape({
@@ -73,6 +86,12 @@ const UserForm: React.FC = () => {
     role: Yup.string()
       .oneOf(["viewer", "streamer", "superAdmin"], "Please select a valid role")
       .required("Role is required"),
+    dob: Yup.string()
+      .required("Date of birth is required")
+      .test("age-check", "User must be at least 21 years old", function(value) {
+        if (!value) return false;
+        return calculateAge(value) >= 21;
+      }),
     // Password fields only required for create mode
     ...(isEditMode ? {} : {
       password: Yup.string()
@@ -93,6 +112,7 @@ const UserForm: React.FC = () => {
       userName: "",
       phone: "",
       role: "viewer",
+      dob: "",
       // Password fields only for create mode
       ...(isEditMode ? {} : {
         password: "",
@@ -174,6 +194,7 @@ const UserForm: React.FC = () => {
             userName: user.userName,
             phone: user.phone,
             role: user.role,
+            dob: user.dob || "",
           });
 
           console.log("✅ User data loaded:", user);
@@ -385,6 +406,31 @@ const UserForm: React.FC = () => {
                         {formik.touched.role && formik.errors.role ? (
                           <FormFeedback type="invalid">{formik.errors.role}</FormFeedback>
                         ) : null}
+                      </div>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    {/* Date of Birth */}
+                    <Col md={6}>
+                      <div className="mb-3">
+                        <Label htmlFor="dob">Date of Birth <span className="text-danger">*</span></Label>
+                        <Input
+                          id="dob"
+                          name="dob"
+                          type="date"
+                          placeholder="Select date of birth"
+                          value={formik.values.dob}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          invalid={formik.touched.dob && formik.errors.dob ? true : false}
+                        />
+                        {formik.touched.dob && formik.errors.dob ? (
+                          <FormFeedback type="invalid">{formik.errors.dob}</FormFeedback>
+                        ) : null}
+                        <small className="form-text text-muted">
+                          Must be at least 21 years old.
+                        </small>
                       </div>
                     </Col>
                   </Row>

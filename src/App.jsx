@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import React from "react";
+import React, { Suspense } from "react";
 
 import { Routes, Route } from "react-router-dom";
 import { connect } from "react-redux";
@@ -76,42 +76,50 @@ const App = (props) => {
 
   return (
     <React.Fragment>
-      <Routes>
-        {publicRoutes.map((route, idx) => {
-          // Check if this route should redirect authenticated users
-          const shouldRedirect = authRedirectRoutes.includes(route.path);
-          
-          return (
+      <Suspense fallback={
+        <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      }>
+        <Routes>
+          {publicRoutes.map((route, idx) => {
+            // Check if this route should redirect authenticated users
+            const shouldRedirect = authRedirectRoutes.includes(route.path);
+            
+            return (
+              <Route
+                path={route.path}
+                element={
+                  shouldRedirect ? (
+                    <PublicRoute>
+                      <NonAuthLayout>{route.component}</NonAuthLayout>
+                    </PublicRoute>
+                  ) : (
+                    <NonAuthLayout>{route.component}</NonAuthLayout>
+                  )
+                }
+                key={idx}
+                exact={true}
+              />
+            );
+          })}
+
+          {authProtectedRoutes.map((route, idx) => (
             <Route
               path={route.path}
               element={
-                shouldRedirect ? (
-                  <PublicRoute>
-                    <NonAuthLayout>{route.component}</NonAuthLayout>
-                  </PublicRoute>
-                ) : (
-                  <NonAuthLayout>{route.component}</NonAuthLayout>
-                )
+                <Authmiddleware>
+                  <Layout>{route.component}</Layout>
+                </Authmiddleware>
               }
               key={idx}
               exact={true}
             />
-          );
-        })}
-
-        {authProtectedRoutes.map((route, idx) => (
-          <Route
-            path={route.path}
-            element={
-              <Authmiddleware>
-                <Layout>{route.component}</Layout>
-              </Authmiddleware>
-            }
-            key={idx}
-            exact={true}
-          />
-        ))}
-      </Routes>
+          ))}
+        </Routes>
+      </Suspense>
     </React.Fragment>
   );
 };
