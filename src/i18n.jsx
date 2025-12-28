@@ -2,11 +2,10 @@ import i18n from "i18next"
 import detector from "i18next-browser-languagedetector"
 import { initReactI18next } from "react-i18next"
 
-import translationGr from "./locales/gr/translation.json"
-import translationIT from "./locales/it/translation.json"
-import translationRS from "./locales/rs/translation.json"
-import translationSP from "./locales/sp/translation.json"
-import translationENG from "./locales/eng/translation.json"
+import translationGr from "./assets/lang/gr.json"
+import translationIT from "./assets/lang/it.json"
+import translationENG from "./assets/lang/en.json"
+import translationSP from "./assets/lang/sp.json"
 
 // the translations
 const resources = {
@@ -16,13 +15,10 @@ const resources = {
   it: {
     translation: translationIT,
   },
-  rs: {
-    translation: translationRS,
-  },
   sp: {
     translation: translationSP,
   },
-  eng: {
+  en: {
     translation: translationENG,
   },
 }
