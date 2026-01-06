@@ -14,6 +14,7 @@ import {
   Alert,
   Spinner,
 } from "reactstrap";
+import Switch from "react-switch";
 
 // Formik validation
 import * as Yup from "yup";
@@ -32,6 +33,8 @@ interface User {
   phone: string;
   role: string;
   dob?: string;
+  superLinkEnabled?: boolean;
+  superLinkUrl?: string;
 }
 
 interface ApiResponse {
@@ -50,6 +53,15 @@ const UserForm: React.FC = () => {
   const [submitLoading, setSubmitLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const isValidHttpUrl = (value: string): boolean => {
+    try {
+      const url = new URL(value);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
 
   // Function to calculate age
   const calculateAge = (dobString: string): number => {
@@ -92,6 +104,17 @@ const UserForm: React.FC = () => {
         if (!value) return false;
         return calculateAge(value) >= 21;
       }),
+    superLinkEnabled: Yup.boolean().required(),
+    superLinkUrl: Yup.string().test(
+      "super-link-url",
+      "Please enter a valid URL (must start with http:// or https://)",
+      function (value) {
+        const enabled = (this.parent as any)?.superLinkEnabled;
+        if (!enabled) return true;
+        if (!value) return true;
+        return isValidHttpUrl(value);
+      }
+    ),
     // Password fields only required for create mode
     ...(isEditMode ? {} : {
       password: Yup.string()
@@ -113,6 +136,8 @@ const UserForm: React.FC = () => {
       phone: "",
       role: "viewer",
       dob: "",
+      superLinkEnabled: false,
+      superLinkUrl: "",
       // Password fields only for create mode
       ...(isEditMode ? {} : {
         password: "",
@@ -195,6 +220,8 @@ const UserForm: React.FC = () => {
             phone: user.phone,
             role: user.role,
             dob: user.dob || "",
+            superLinkEnabled: Boolean(user.superLinkEnabled),
+            superLinkUrl: user.superLinkUrl || "",
           });
 
           console.log("✅ User data loaded:", user);
@@ -405,6 +432,49 @@ const UserForm: React.FC = () => {
                         </Input>
                         {formik.touched.role && formik.errors.role ? (
                           <FormFeedback type="invalid">{formik.errors.role}</FormFeedback>
+                        ) : null}
+                      </div>
+                    </Col>
+                  </Row>
+
+                  <Row className="align-items-end">
+                    <Col md={4}>
+                      <div className="mb-3">
+                        <Label htmlFor="superLinkEnabled">Super Link</Label>
+                        <div className="d-flex align-items-center gap-2">
+                          <Switch
+                            id="superLinkEnabled"
+                            checked={Boolean(formik.values.superLinkEnabled)}
+                            onChange={(checked) => {
+                              formik.setFieldValue("superLinkEnabled", checked);
+                              formik.setFieldTouched("superLinkEnabled", true);
+                            }}
+                            height={18}
+                            width={36}
+                            uncheckedIcon={false}
+                            checkedIcon={false}
+                          />
+                          <div>{formik.values.superLinkEnabled ? "ON" : "OFF"}</div>
+                        </div>
+                      </div>
+                    </Col>
+
+                    <Col md={8}>
+                      <div className="mb-3">
+                        <Label htmlFor="superLinkUrl">Super Link URL</Label>
+                        <Input
+                          id="superLinkUrl"
+                          name="superLinkUrl"
+                          type="text"
+                          placeholder="https://example.com"
+                          value={formik.values.superLinkUrl}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          disabled={!formik.values.superLinkEnabled}
+                          invalid={formik.touched.superLinkUrl && formik.errors.superLinkUrl ? true : false}
+                        />
+                        {formik.touched.superLinkUrl && formik.errors.superLinkUrl ? (
+                          <FormFeedback type="invalid">{formik.errors.superLinkUrl as any}</FormFeedback>
                         ) : null}
                       </div>
                     </Col>
